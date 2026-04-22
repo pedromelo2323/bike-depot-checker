@@ -1,106 +1,46 @@
-# Tenways Bike Depot Checker
+# Bike Finder
 
-Automatically scrapes the Amsterdam Fietsdepot listings daily and sends a **Telegram alert** if any listing mentions **Tenways**.
-
----
-
-## How it works
-
-The script calls the hidden JSON API behind [verlorenofgevonden.nl](https://www.verlorenofgevonden.nl/overzicht?search=fietsendepot+amsterdam), fetching **all of today's listings** in one go (no infinite scrolling). It then searches every listing's brand, description and category for the word "tenways" and notifies you via Telegram if found.
+Automated daily tracker that monitors two sources for **Tenways e-bike** listings and sends a **Telegram notification** every evening at 10 PM.
 
 ---
 
-## Setup
+## What it does
 
-### 1. Install Python dependency
+Every day at **22:00 (Amsterdam time)**, two scripts run automatically on GitHub's servers:
 
-```bash
-pip3 install requests
-```
+### 1. Amsterdam Fietsdepot checker
+Scans all bikes registered at the **Amsterdam municipal bike depot** (Fietsdepot Bornhout 8) for that day. If any listing mentions "Tenways", you get a Telegram alert with the description and a direct link to the listing.
 
-### 2. Create a Telegram bot
+> This is useful because the depot website uses infinite scroll — you'd have to scroll through hundreds of listings manually to find a specific brand.
 
-1. Open Telegram and search for **@BotFather**
-2. Send `/newbot` and follow the prompts — you'll get a **bot token** like `123456:ABCdef...`
-3. Start a chat with your new bot (search its username and press Start)
-4. Get your **chat ID** by visiting this URL in your browser (replace `YOUR_TOKEN`):
-   ```
-   https://api.telegram.org/botYOUR_TOKEN/getUpdates
-   ```
-   Send a message to your bot first, then open that URL — look for `"id"` inside `"chat"`.
-
-### 3. Set your credentials
-
-Add these two lines to your shell profile (`~/.zshrc`):
-
-```bash
-export TELEGRAM_BOT_TOKEN="123456:ABCdef..."
-export TELEGRAM_CHAT_ID="987654321"
-```
-
-Then reload:
-
-```bash
-source ~/.zshrc
-```
-
-### 4. Test it manually
-
-```bash
-cd "/Users/pedro.melo/Desktop/Project Bike Deposit"
-python3 check_tenways.py
-```
-
-You should see output like:
-```
-Checking Fietsdepot Amsterdam listings for 22-04-2026...
-Total listings today: 329
-  Scanned 329/329...
-Done. Checked 329 listings — found 0 match(es).
-No Tenways found for today (22-04-2026). No notification sent.
-```
+### 2. Marktplaats checker
+Scans all **new listings posted today** on Marktplaats matching `tenways cgo600 pro`. Sends a single Telegram message with title, price, city and direct link for each result.
 
 ---
 
-## Schedule it daily with cron
+## Telegram message examples
 
-Run this to open your crontab:
+**Fietsdepot alert:**
+```
+TENWAYS gevonden in Fietsdepot Amsterdam!
+Datum: 22-04-2026 — 1 listing(s)
 
-```bash
-crontab -e
+• Tenways — herenfiets (zwart)
+  herenfiets electrische fiets Tenways lakschade ( zwart ).
+  Locatie gevonden: Bakkersstraat, Centrum Amsterdam.
+  Reg: F0363f-2500149141
+  https://www.verlorenofgevonden.nl/overzicht?search=F0363f-2500149141
 ```
 
-Add this line to run the script every day at **19:00 (7 PM)**, scanning the previous day's listings:
-
+**Marktplaats alert:**
 ```
-0 19 * * * TELEGRAM_BOT_TOKEN="your_token" TELEGRAM_CHAT_ID="your_chat_id" /usr/bin/python3 "/Users/pedro.melo/Desktop/Project Bike Deposit/check_tenways.py" >> "/Users/pedro.melo/Desktop/Project Bike Deposit/check_tenways.log" 2>&1
+🛒 Tenways op Marktplaats vandaag!
+📅 22-04-2026 — 3 nieuwe listing(s)
+
+• tenways cgo600 pro | Framemaat M | Avocado groen
+  € 1.399 — Haarlem
+  https://www.marktplaats.nl/v/...
 ```
-
-> **Note:** Replace the token and chat ID with your actual values. The `>>` part saves a log file so you can check past runs.
-
-To verify the cron job was added:
-```bash
-crontab -l
-```
-
----
-
-## What triggers an alert?
-
-The script searches for these keywords (case-insensitive) in each listing's brand, description and category:
-- `tenways`
-- `ten ways`
-- `tenway`
-
-When found, you receive a Telegram message like:
-
-> 🚲 **TENWAYS gevonden in Fietsdepot Amsterdam!**
-> 📅 22-04-2026 — 1 listing(s)
->
-> • **Tenways** — e-bike (zwart)
->   e-bike Tenways ( zwart ). Locatie gevonden: ...
->   Registratienummer: `F0363f-250012345`
->   [Bekijk listing](https://formulieren.verlorenofgevonden.nl/...)
 
 ---
 
@@ -108,5 +48,58 @@ When found, you receive a Telegram message like:
 
 | File | Description |
 |------|-------------|
-| `check_tenways.py` | Main script |
-| `check_tenways.log` | Auto-created log of past runs (after cron runs) |
+| `check_tenways.py` | Fietsdepot Amsterdam scraper |
+| `check_marktplaats.py` | Marktplaats scraper |
+| `.github/workflows/check_tenways.yml` | GitHub Actions schedule (runs both scripts daily at 10 PM) |
+
+---
+
+## Setup
+
+### 1. Telegram bot
+
+1. Open Telegram, search for **@BotFather**
+2. Send `/newbot` — follow the prompts to get a **bot token**
+3. Start a chat with your bot and send any message
+4. Get your **chat ID** by opening this URL in your browser (replace `YOUR_TOKEN`):
+   ```
+   https://api.telegram.org/botYOUR_TOKEN/getUpdates
+   ```
+   Find the `"id"` number inside `"chat"`.
+
+### 2. Add secrets to GitHub
+
+Go to **Settings → Secrets → Actions** in this repo and add:
+
+| Secret name | Value |
+|-------------|-------|
+| `TELEGRAM_BOT_TOKEN` | your bot token |
+| `TELEGRAM_CHAT_ID` | your chat ID |
+
+### 3. Run manually
+
+Go to **Actions → Tenways Bike Depot Check → Run workflow** to trigger immediately.
+
+---
+
+## Configuration
+
+To change the Marktplaats search query, edit the top of `check_marktplaats.py`:
+
+```python
+SEARCH_QUERY = "tenways cgo600 pro"   # change to any search term
+```
+
+To change the notification time, edit `.github/workflows/check_tenways.yml`:
+
+```yaml
+- cron: '0 20 * * *'   # 20:00 UTC = 22:00 Amsterdam (CEST)
+```
+
+---
+
+## Notes
+
+- **No dependencies** — both scripts use only Python standard library
+- GitHub automatically disables scheduled workflows after **60 days of repo inactivity**. If notifications stop, go to Actions and click "Enable workflow"
+- The Marktplaats checker only reports listings with `date == "Vandaag"` (posted today), not older listings that were bumped
