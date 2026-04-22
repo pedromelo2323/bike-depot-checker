@@ -22,7 +22,7 @@ import os
 import time
 import urllib.request
 import urllib.parse
-from datetime import date, timedelta
+from datetime import date
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
@@ -130,9 +130,9 @@ def format_match(source: dict) -> str:
 
 
 def main():
-    yesterday = date.today() - timedelta(days=1)
-    date_str  = yesterday.strftime("%d-%m-%Y")
-    print(f"Checking Fietsdepot Amsterdam listings for {date_str} (yesterday)...")
+    today    = date.today()
+    date_str = today.strftime("%d-%m-%Y")
+    print(f"Checking Fietsdepot Amsterdam listings for {date_str} (today)...")
 
     offset  = 0
     total   = None

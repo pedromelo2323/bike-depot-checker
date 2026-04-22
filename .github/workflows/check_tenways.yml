@@ -2,8 +2,8 @@ name: Tenways Bike Depot Check
 
 on:
   schedule:
-    # Runs every day at 19:00 Amsterdam time (17:00 UTC in summer CEST)
-    - cron: '0 17 * * *'
+    # Runs every day at 22:00 Amsterdam time (20:00 UTC in summer CEST)
+    - cron: '0 20 * * *'
   workflow_dispatch: # allows manual trigger from GitHub website
 
 jobs:
