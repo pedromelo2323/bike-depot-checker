@@ -2,21 +2,29 @@ name: Tenways Bike Depot Check
 
 on:
   schedule:
-    # Runs every day at 19:00 Amsterdam time (17:00 UTC in winter, 17:00 UTC in summer)
-    # Amsterdam is UTC+2 in summer (CEST), so 19:00 CEST = 17:00 UTC
+    # Runs every day at 19:00 Amsterdam time (17:00 UTC in summer CEST)
     - cron: '0 17 * * *'
   workflow_dispatch: # allows manual trigger from GitHub website
 
 jobs:
-  check:
+  check-depot:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Run Tenways checker
+      - name: Run Fietsdepot checker
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python3 check_tenways.py
+
+  check-marktplaats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Run Marktplaats checker
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 check_marktplaats.py
