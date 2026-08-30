@@ -1,5 +1,5 @@
 # Bike Finder
-
+My e-bike disappeared so I vibe-coded a bot to find similar bikes to mine in a city deposit
 Automated daily tracker that monitors two sources for **Tenways e-bike** listings and sends a **Telegram notification** every evening at 10 PM.
 
 ---
